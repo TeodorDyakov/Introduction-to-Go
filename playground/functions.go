@@ -1,7 +1,9 @@
 package main
 
 import "fmt"
+import "math"
 
+//recursion
 func fac(n int) int{
 	if n == 1{
 		return 1
@@ -9,6 +11,7 @@ func fac(n int) int{
 	return n * fac(n-1)
 }
 
+//function returning an anonymous function
 func op(n string) func(int, int) int {
 	if n == "+" {
 		return func(a, b int) int{
@@ -23,6 +26,7 @@ func op(n string) func(int, int) int {
 	return nil
 }
 
+//closure
 func seq() func() int{
 	var n int = 0
 	return func() int{
@@ -37,6 +41,25 @@ func global() func() int{
 	return func() int{
 		return n
 	}
+}
+
+//naked return
+//pow is defined at the top of the function
+func pow(a, n int)(pow int){
+	pow = 1
+	for i := 0; i < n; i++ {
+		pow *= a
+	}
+	return
+}
+
+//variadic function
+func powSum(pow float64, nums ...float64){
+	total := 0.0
+	for _, num := range nums {
+        total += math.Pow(num, pow)
+    }
+ 	fmt.Println(total)
 }
 
 func main() {
@@ -67,6 +90,11 @@ func main() {
     n = 7
     fmt.Println(g())
     //7
+
+   	fmt.Println(pow(3,3))
+   	//27
+   	powSum(3, 1, 2, 3)
+   	//36
 }
 
 
