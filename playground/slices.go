@@ -33,20 +33,14 @@ func main() {
 
     s = append(s, "pig")
     s = append(s, "fish")
+
     fmt.Println(s)
     fmt.Println(len(s))
 
-
-    fmt.Println(s[4:],' ', s[:3], s[:])
-
-    //5
-
-  	s = s[2:3]
-    fmt.Println(s)
+	fmt.Println(s[4:],' ', s[:3],' ', s[:])
 
     //странно ? Може би
-    s = s[0:3]
-    fmt.Println(s)
+    fmt.Println(s[2:3][0:3])
 
     f :=[...]float64{5.0, 2.0, 10.0, 16.0, 2.0, 5.0}
     //fmt.Println(avg(f)) - не работи
@@ -56,15 +50,16 @@ func main() {
     slice := f[0:6]
     fmt.Println(slice, '\n', avg(slice))
     fmt.Println(movingAvg(slice, 3))
+
+    //този append е еквивалентен  на f[3] = 9999.0
     _ = append(f[1:3], 9999.0)
+    //ако apppend-а излиза извън големината на слайса, се allocate-ва нов масив с големина len(f) + 1 и ни се връща слай към него.
+    //f остава непромемен
     slice = append(f[:], 666.0)
     fmt.Println(f)
     fmt.Println(slice)
+    
     slice[0] = 420.0
     fmt.Println(slice)
     fmt.Println(f[0])
     }
-
-    //слайсовете са готин feature във Go. Те предствляват тип който всъшност е нещо като пойнтър към масив и има дължина
-    //Докато писах на Java съм се замислял че, нещо подобно ня тях би улеснилo пресмятанията със масиви,
-    // които често са досадни или неудобни.
