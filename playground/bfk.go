@@ -12,14 +12,14 @@ func main(){
 	in := bufio.NewReader(os.Stdin)
 	code := []byte(os.Args[1])
 
-	jump := func(step int, do bool){
-		for brackets := 1; do && brackets != 0; {
+	jump := func(step int){
+		for brackets := 1; brackets != 0; {
 			insPtr += step
 			switch (code[insPtr]) {
 				case '[' : brackets += step
 				case ']' : brackets -= step
 			}	
-		}			
+		}		
 	}
 
 	for ; insPtr < len(code); insPtr++ {
@@ -28,10 +28,9 @@ func main(){
 			case '<' : ptr--
 			case '+' : mem[ptr]++
 			case '-' : mem[ptr]--
-			case '[' : jump(1, mem[ptr] == 0)
-			case ']' : jump(-1, mem[ptr] != 0)
-			case ',' : 
-				input, _ := in.ReadString('\n')
+			case '[' : if mem[ptr] == 0 {jump(1)}
+			case ']' : if mem[ptr] != 0 {jump(-1)}
+			case ',' : input, _ := in.ReadString('\n')
 				mem[ptr] = ([]byte(input))[0]
 			case '.' : fmt.Printf(string(mem[ptr]))
 		}
