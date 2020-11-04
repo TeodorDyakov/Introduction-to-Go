@@ -7,33 +7,33 @@ import (
 )
 
 func main(){
-	var arr[30000]byte 
+	var mem[30000]byte 
 	ptr, insPtr := 0, 0
 	in := bufio.NewReader(os.Stdin)
-	prog := []byte(os.Args[1])
+	code := []byte(os.Args[1])
 
 	jump := func(step int, do bool){
 		for brackets := 1; do && brackets != 0; {
 			insPtr += step
-			switch (prog[insPtr]) {
+			switch (code[insPtr]) {
 				case '[' : brackets += step
 				case ']' : brackets -= step
 			}	
 		}			
 	}
 
-	for ; insPtr < len(prog); insPtr++ {
-		switch prog[insPtr] {
+	for ; insPtr < len(code); insPtr++ {
+		switch code[insPtr] {
 			case '>' : ptr++
 			case '<' : ptr--
-			case '+' : arr[ptr]++
-			case '-' : arr[ptr]--
-			case '[' : jump(1, arr[ptr] == 0)
-			case ']' : jump(-1, arr[ptr] != 0)
+			case '+' : mem[ptr]++
+			case '-' : mem[ptr]--
+			case '[' : jump(1, mem[ptr] == 0)
+			case ']' : jump(-1, mem[ptr] != 0)
 			case ',' : 
 				input, _ := in.ReadString('\n')
-				arr[ptr] = ([]byte(input))[0]
-			case '.' : fmt.Printf(string(arr[ptr]))
+				mem[ptr] = ([]byte(input))[0]
+			case '.' : fmt.Printf(string(mem[ptr]))
 		}
 	}
 }
