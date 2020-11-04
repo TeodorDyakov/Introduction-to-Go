@@ -11,12 +11,14 @@ func fac(n int) int{
 	return n * fac(n-1)
 }
 
-//function returning an anonymous function
+func add(a, b int) int{
+	return a + b
+}
+
+//function returning a function - it return either a function literal (aonnymous function) or a named function
 func op(n string) func(int, int) int {
 	if n == "+" {
-		return func(a, b int) int{
-			return a + b
-		}
+		return add
 	}
 	if n == "*"	{
 		return func(a, b int) int{
@@ -63,6 +65,7 @@ func powSum(pow float64, nums ...float64){
 }
 
 func main() {
+
 	var f func(int, int) int = op("+")
 	fmt.Println(f(2,3))
 	//5
@@ -95,6 +98,41 @@ func main() {
    	//27
    	powSum(3, 1, 2, 3)
    	//36
+
+   	//анонимна функция която се декларира и изпълнява в един expression
+   	var xx int = func(y int)int{
+   			return y*y
+   	}(16)
+
+   	fmt.Println(xx)
+
+   	//functions literals can be nested arbitraly deep
+   	func(){
+   		func(){
+			func(){	
+				fmt.Println("bottom")
+			}()
+			fmt.Println("middle")
+   		}()
+   		fmt.Println("top")
+   	}()
+
+   	//weird shit
+   	//not gonna work: undefined yy
+   	// yy := func(n int) int{
+   	// 	if n == 0 {
+   	// 		return 1 
+   	// 	}
+   	// 	func(){
+   	// 		yy(n - 1)
+   	// 	}()
+   	// 	return n
+   	// }(10)
+
+   	//array of function literals
+	farr := [...]func(int, int)int{func(a, b int)int{return a+b}, func(a, b int)int{return a*b}}
+	fmt.Println(farr)
+	
 }
 
 

@@ -37,7 +37,7 @@ func main() {
     fmt.Println(s)
     fmt.Println(len(s))
 
-	fmt.Println(s[4:],' ', s[:3],' ', s[:])
+	fmt.Println(s[4:], s[:3], s[:])
 
     //странно ? Може би
     fmt.Println(s[2:3][0:3])
@@ -48,7 +48,8 @@ func main() {
     // за да работи какво правим? Ползваме slice
     // слайсове се правят с полуотворен интервал f[l, r] - f[r] - влиза в слайса, f[r] - не
     slice := f[0:6]
-    fmt.Println(slice, '\n', avg(slice))
+    fmt.Println(slice)
+    fmt.Println(avg(slice))
     fmt.Println(movingAvg(slice, 3))
 
     //този append е еквивалентен  на f[3] = 9999.0
@@ -62,4 +63,16 @@ func main() {
     slice[0] = 420.0
     fmt.Println(slice)
     fmt.Println(f[0])
+
+    slice = []float64{1.0,2.0,3.0}
+    fmt.Println(slice)
+
+    //неициализирания слайс е със стойност nil, len и cap - 0
+    var empty[]int
+    fmt.Println(empty == nil)
+    fmt.Println(empty)
+    fmt.Println(cap(empty))
+    fmt.Println(len(empty))
+    //грешка - слайсове могат да се сравняват само с nil
+    // fmt.Println(slice[1:] == slice[1:])
     }
