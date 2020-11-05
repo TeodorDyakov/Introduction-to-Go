@@ -15,7 +15,7 @@ func main(){
 	jump := func(step int){
 		for brackets := 1; brackets != 0; {
 			insPtr += step
-			switch (code[insPtr]) {
+			switch code[insPtr] {
 				case '[' : brackets += step
 				case ']' : brackets -= step
 			}	
