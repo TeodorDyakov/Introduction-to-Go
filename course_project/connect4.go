@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math/rand"
 	"net"
@@ -198,7 +197,6 @@ func main() {
 	if option == "1" {
 		color = PLAYER_ONE_COLOR
 		opponentColor = PLAYER_TWO_COLOR
-		reader := bufio.NewReader(os.Stdin)
 
 		fmt.Println("Enter friends IP:")
 
@@ -221,7 +219,7 @@ func main() {
 
 		if err == nil {
 			fmt.Print("A friend has connected! The game will begin soon!")
-			time.Sleep(3 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}
 
@@ -233,8 +231,8 @@ func main() {
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
 			var message string
-			message, _ = bufio.NewReader(conn).ReadString('\n')
-			otherPlayerColumn, _ := strconv.Atoi(message[:len(message)-1])
+			fmt.Fscan(conn, &message)
+			otherPlayerColumn, _ := strconv.Atoi(message)
 			drop(board, otherPlayerColumn, opponentColor)
 			waiting = false
 		} else {
@@ -247,7 +245,7 @@ func main() {
 				if column >= len(board[0]) || column < 0 || !drop(board, column, color) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
-					fmt.Fprint(conn, column)
+					fmt.Fprintf(conn, "%d\n", column)
 					waiting = true
 					break
 				}
