@@ -247,7 +247,7 @@ func main() {
 				if column >= len(board[0]) || column < 0 || !drop(board, column, color) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
-					fmt.Fprintf(conn, "%d\n", column)
+					fmt.Fprint(conn, column)
 					waiting = true
 					break
 				}
