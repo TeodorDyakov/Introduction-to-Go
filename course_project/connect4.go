@@ -3,11 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 var clear map[string]func() //create a map for storing clear funcs
@@ -69,7 +71,7 @@ func print(board [][]string) {
 
 func drop(board [][]string, column int, player string) bool {
 	if column < len(board[0]) && col[column] < len(board) {
-		board[5 - col[column]][column] = player
+		board[5-col[column]][column] = player
 		col[column]++
 		return true
 	}
@@ -80,7 +82,10 @@ func areFourConnected(board [][]string, player string) bool {
 	// horizontalCheck
 	for j := 0; j < len(board[0])-3; j++ {
 		for i := 0; i < len(board); i++ {
-			if board[i][j] == player && board[i][j+1] == player && board[i][j+2] == player && board[i][j+3] == player {
+			if board[i][j] == player &&
+				board[i][j+1] == player &&
+				board[i][j+2] == player &&
+				board[i][j+3] == player {
 				return true
 			}
 		}
@@ -88,7 +93,10 @@ func areFourConnected(board [][]string, player string) bool {
 	// verticalCheck
 	for i := 0; i < len(board)-3; i++ {
 		for j := 0; j < len(board[0]); j++ {
-			if board[i][j] == player && board[i+1][j] == player && board[i+2][j] == player && board[i+3][j] == player {
+			if board[i][j] == player &&
+				board[i+1][j] == player &&
+				board[i+2][j] == player &&
+				board[i+3][j] == player {
 				return true
 			}
 		}
@@ -96,7 +104,10 @@ func areFourConnected(board [][]string, player string) bool {
 	// ascendingDiagonalCheck
 	for i := 3; i < len(board); i++ {
 		for j := 0; j < len(board[0])-3; j++ {
-			if board[i][j] == player && board[i-1][j+1] == player && board[i-2][j+2] == player && board[i-3][j+3] == player {
+			if board[i][j] == player &&
+				board[i-1][j+1] == player &&
+				board[i-2][j+2] == player &&
+				board[i-3][j+3] == player {
 				return true
 			}
 		}
@@ -104,7 +115,10 @@ func areFourConnected(board [][]string, player string) bool {
 	// descendingDiagonalCheck
 	for i := 3; i < len(board); i++ {
 		for j := 3; j < len(board[0]); j++ {
-			if board[i][j] == player && board[i-1][j-1] == player && board[i-2][j-2] == player && board[i-3][j-3] == player {
+			if board[i][j] == player &&
+				board[i-1][j-1] == player &&
+				board[i-2][j-2] == player &&
+				board[i-3][j-3] == player {
 				return true
 			}
 		}
@@ -114,19 +128,71 @@ func areFourConnected(board [][]string, player string) bool {
 
 func main() {
 
-	var conn net.Conn		
+	var conn net.Conn
 	var color string
 	var opponentColor string
 	waiting := true
 
-	fmt.Println("Hello! Welcome to connect four CMD!\nTo connect to a friend ip: Enter [1]\n To wait for friend to connect to you enter [2]")
+	fmt.Println("Hello! Welcome to connect four CMD!\n" +
+		"To connect to a friend ip: Enter [1]\n" +
+		"To wait for friend to connect to you enter [2]\n" +
+		"To play against AI, enter [3]")
 
 	var option string
 	fmt.Scan(&option)
 
-	for !(option == "1" || option == "2"){
+	for !(option == "1" || option == "2" || option == "3") {
 		fmt.Println("Unknown command! Try again:")
 		fmt.Scan(&option)
+	}
+
+	if option == "3" {
+		color = PLAYER_ONE_COLOR
+		opponentColor = PLAYER_TWO_COLOR
+		waiting = false
+
+
+		for !areFourConnected(board, color) && !areFourConnected(board, opponentColor) {
+
+			clearConsole()
+			print(board)
+
+			if waiting {
+				fmt.Println("waiting for oponent move...\n")
+				open := []int{}
+				for i := 0; i < len(col); i++ {
+					if col[i] < 5 {
+						open = append(open, i)
+					}
+				}
+
+				drop(board, open[rand.Intn(len(open))], opponentColor)
+				waiting = false
+			} else {
+				for {
+					fmt.Printf("Enter column to drop: ")
+
+					var column int
+					fmt.Scan(&column)
+
+					if column >= len(board[0]) || column < 0 || !drop(board, column, color) {
+						fmt.Println("You cant place here! Try another column")
+					} else {
+						waiting = true
+						break
+					}
+				}
+			}
+		}
+
+		clearConsole()
+		print(board)
+		if areFourConnected(board, color) {
+			fmt.Println("You won!")
+		} else {
+			fmt.Println("You lost.")
+		}
+		return
 	}
 
 	if option == "1" {
@@ -135,11 +201,14 @@ func main() {
 		reader := bufio.NewReader(os.Stdin)
 
 		fmt.Println("Enter friends IP:")
-		ip, _ := reader.ReadString('\n')
-		conn, _ = net.Dial("tcp", ip[:len(ip)-1] + PORT)
+
+		var ip string
+		fmt.Scan(&ip)
+
+		conn, _ = net.Dial("tcp", ip + PORT)
 		waiting = false
-		
-	}else if option == "2" {
+
+	} else if option == "2" {
 		color = PLAYER_TWO_COLOR
 		opponentColor = PLAYER_ONE_COLOR
 
@@ -151,7 +220,8 @@ func main() {
 		conn, err = ln.Accept()
 
 		if err == nil {
-			fmt.Print("A friend has connected!\n")
+			fmt.Print("A friend has connected! The game will begin soon!")
+			time.Sleep(3 * time.Second)
 		}
 	}
 
@@ -184,6 +254,7 @@ func main() {
 			}
 		}
 	}
+
 	clearConsole()
 	print(board)
 	if areFourConnected(board, color) {
@@ -191,4 +262,5 @@ func main() {
 	} else {
 		fmt.Println("You lost.")
 	}
+
 }
