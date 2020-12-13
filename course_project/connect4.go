@@ -125,12 +125,103 @@ func areFourConnected(board [][]string, player string) bool {
 	return false
 }
 
-func main() {
+var playerToColor map[int]string = map[int]string{
+   	1 : PLAYER_ONE_COLOR,
+    -1 : PLAYER_TWO_COLOR,
+}
 
-	var conn net.Conn
-	var color string
-	var opponentColor string
-	waiting := true
+func minimax(board[][] string, color int, depth int) (int, int){
+	if areFourConnected(board, PLAYER_TWO_COLOR){
+		// fmt.Println("danger noodle")
+		return 1000-depth, -1
+	} else if areFourConnected(board, PLAYER_ONE_COLOR){
+		return -1000+depth, -1
+	}else if depth == 5{
+		return 0, -1
+	}
+
+	if(color == -1){
+		value := -1000000
+		bestMove := 0
+
+		r := rand.Perm(7)
+
+		for _, i := range r{
+			if col[i] < 5 {
+				drop(board, i, playerToColor[color])
+				val, _ := minimax(board, -color, depth + 1)
+				if(value < val){
+					bestMove = i
+					value = val
+				}
+				col[i]--
+				board[5 - col[i]][i] = EMPTY_SPOT
+			}
+		}
+		return value, bestMove
+	}
+	
+
+	value := 1000000
+	bestMove := 0
+
+	for i := 0; i < len(col); i++{
+		if col[i] < 5 {
+			drop(board, i, playerToColor[color])
+			val, _ := minimax(board, -color, depth + 1)
+			if(value > val){
+				bestMove = i
+				value = val
+			}
+			col[i]--
+			board[5 - col[i]][i] = EMPTY_SPOT
+		}
+	}
+	return value, bestMove
+}
+
+func playAgainstAi(){
+	humanColor := PLAYER_ONE_COLOR
+	aiColor := PLAYER_TWO_COLOR
+	waiting := false
+
+	for !areFourConnected(board, humanColor) && !areFourConnected(board, aiColor) {
+
+		clearConsole()
+		print(board)
+
+		if waiting {
+			fmt.Println("waiting for oponent move...\n")
+			_, bestMove := minimax(board, -1, 0)
+			drop(board, bestMove, aiColor)
+			waiting = false
+		} else {
+			for {
+				fmt.Printf("Enter column to drop: ")
+
+				var column int
+				fmt.Scan(&column)
+
+				if column >= len(board[0]) || column < 0 || !drop(board, column, humanColor) {
+					fmt.Println("You cant place here! Try another column")
+				} else {
+					waiting = true
+					break
+				}
+			}
+		}
+	}
+
+	clearConsole()
+	print(board)
+	if areFourConnected(board, humanColor) {
+		fmt.Println("You won!")
+	} else {
+		fmt.Println("You lost.")
+	}
+}
+
+func main() {
 
 	fmt.Println("Hello! Welcome to connect four CMD!\n" +
 		"To connect to a friend ip: Enter [1]\n" +
@@ -146,53 +237,14 @@ func main() {
 	}
 
 	if option == "3" {
-		color = PLAYER_ONE_COLOR
-		opponentColor = PLAYER_TWO_COLOR
-		waiting = false
-
-
-		for !areFourConnected(board, color) && !areFourConnected(board, opponentColor) {
-
-			clearConsole()
-			print(board)
-
-			if waiting {
-				fmt.Println("waiting for oponent move...\n")
-				open := []int{}
-				for i := 0; i < len(col); i++ {
-					if col[i] < 5 {
-						open = append(open, i)
-					}
-				}
-
-				drop(board, open[rand.Intn(len(open))], opponentColor)
-				waiting = false
-			} else {
-				for {
-					fmt.Printf("Enter column to drop: ")
-
-					var column int
-					fmt.Scan(&column)
-
-					if column >= len(board[0]) || column < 0 || !drop(board, column, color) {
-						fmt.Println("You cant place here! Try another column")
-					} else {
-						waiting = true
-						break
-					}
-				}
-			}
-		}
-
-		clearConsole()
-		print(board)
-		if areFourConnected(board, color) {
-			fmt.Println("You won!")
-		} else {
-			fmt.Println("You lost.")
-		}
+		playAgainstAi()
 		return
 	}
+
+	var conn net.Conn
+	var color string
+	var opponentColor string
+	waiting := true
 
 	if option == "1" {
 		color = PLAYER_ONE_COLOR
