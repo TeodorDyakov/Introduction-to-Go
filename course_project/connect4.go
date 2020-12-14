@@ -57,14 +57,14 @@ func clearConsole() {
 	}
 }
 
-func print(board [][]string) {
+func printBoard(board [][]string) {
 	for i := 0; i < len(board[0]); i++ {
 		fmt.Printf("%d ", i)
 	}
 	fmt.Println()
 	for i := 0; i < len(board); i++ {
 		for j := 0; j < len(board[0]); j++ {
-			fmt.Print(board[i][j] + " ")
+			fmt.printBoard(board[i][j] + " ")
 		}
 		fmt.Println()
 	}
@@ -211,7 +211,7 @@ func playAgainstAi() {
 	for !areFourConnected(board, humanColor) && !areFourConnected(board, aiColor) {
 
 		clearConsole()
-		print(board)
+		printBoard(board)
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
@@ -236,7 +236,7 @@ func playAgainstAi() {
 	}
 
 	clearConsole()
-	print(board)
+	printBoard(board)
 	if areFourConnected(board, humanColor) {
 		fmt.Println("You won!")
 	} else {
@@ -293,7 +293,7 @@ func main() {
 		conn, err = ln.Accept()
 
 		if err == nil {
-			fmt.Print("A friend has connected! The game will begin soon!")
+			fmt.printBoard("A friend has connected! The game will begin soon!")
 			time.Sleep(1 * time.Second)
 		}
 	}
@@ -301,7 +301,7 @@ func main() {
 	for !areFourConnected(board, color) && !areFourConnected(board, opponentColor) {
 
 		clearConsole()
-		print(board)
+		printBoard(board)
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
@@ -329,7 +329,7 @@ func main() {
 	}
 
 	clearConsole()
-	print(board)
+	printBoard(board)
 	if areFourConnected(board, color) {
 		fmt.Println("You won!")
 	} else {
