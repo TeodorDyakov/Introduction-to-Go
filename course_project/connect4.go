@@ -130,17 +130,17 @@ var playerToColor map[int]string = map[int]string{
     -1 : PLAYER_TWO_COLOR,
 }
 
-func minimax(board[][] string, color int, depth int) (int, int){
+func minimax(board[][] string, maximizer bool, depth int) (int, int){
 	if areFourConnected(board, PLAYER_TWO_COLOR){
 		// fmt.Println("danger noodle")
-		return 1000-depth, -1
+		return 1000 - depth, -1
 	} else if areFourConnected(board, PLAYER_ONE_COLOR){
-		return -1000+depth, -1
+		return -1000 + depth, -1
 	}else if depth == 5{
 		return 0, -1
 	}
 
-	if(color == -1){
+	if(maximizer){
 		value := -1000000
 		bestMove := 0
 
@@ -149,7 +149,7 @@ func minimax(board[][] string, color int, depth int) (int, int){
 		for _, i := range r{
 			if col[i] < 5 {
 				drop(board, i, playerToColor[color])
-				val, _ := minimax(board, -color, depth + 1)
+				val, _ := minimax(board, false, depth + 1)
 				if(value < val){
 					bestMove = i
 					value = val
@@ -165,10 +165,12 @@ func minimax(board[][] string, color int, depth int) (int, int){
 	value := 1000000
 	bestMove := 0
 
-	for i := 0; i < len(col); i++{
+	r := rand.Perm(7)
+
+	for _, i := range r{
 		if col[i] < 5 {
 			drop(board, i, playerToColor[color])
-			val, _ := minimax(board, -color, depth + 1)
+			val, _ := minimax(board, true, depth + 1)
 			if(value > val){
 				bestMove = i
 				value = val
@@ -192,7 +194,7 @@ func playAgainstAi(){
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			_, bestMove := minimax(board, -1, 0)
+			_, bestMove := minimax(board, false, 0)
 			drop(board, bestMove, aiColor)
 			waiting = false
 		} else {
