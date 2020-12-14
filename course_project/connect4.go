@@ -125,64 +125,52 @@ func areFourConnected(board [][]string, player string) bool {
 	return false
 }
 
-var playerToColor map[int]string = map[int]string{
-   	1 : PLAYER_ONE_COLOR,
-    -1 : PLAYER_TWO_COLOR,
-}
-
-func minimax(board[][] string, maximizer bool, depth int) (int, int){
-	if areFourConnected(board, PLAYER_TWO_COLOR){
-		// fmt.Println("danger noodle")
+func minimax(board [][]string, maximizer bool, depth int) (int, int) {
+	if areFourConnected(board, PLAYER_TWO_COLOR) {
 		return 1000 - depth, -1
-	} else if areFourConnected(board, PLAYER_ONE_COLOR){
+	} else if areFourConnected(board, PLAYER_ONE_COLOR) {
 		return -1000 + depth, -1
-	}else if depth == 5{
+	} else if depth == 5 {
 		return 0, -1
 	}
 
-	if(maximizer){
-		value := -1000000
-		bestMove := 0
+	var value int
+	var bestMove int
+	shuffledColumns := rand.Perm(7)
 
-		r := rand.Perm(7)
-
-		for _, i := range r{
-			if col[i] < 5 {
-				drop(board, i, playerToColor[color])
+	if maximizer {
+		value = -1000000
+		for _, i := range shuffledColumns {
+			if drop(board, i, PLAYER_TWO_COLOR) {
 				val, _ := minimax(board, false, depth + 1)
-				if(value < val){
+				if value < val {
+					bestMove = i
+					value = val
+				}
+				//undo the move(backtracking)
+				col[i]--
+				board[5-col[i]][i] = EMPTY_SPOT
+			}
+		}
+		return value, bestMove
+	}else {
+		value := 1000000
+		for _, i := range shuffledColumns {
+			if drop(board, i, PLAYER_ONE_COLOR) {
+				val, _ := minimax(board, true, depth + 1)
+				if value > val {
 					bestMove = i
 					value = val
 				}
 				col[i]--
-				board[5 - col[i]][i] = EMPTY_SPOT
+				board[5-col[i]][i] = EMPTY_SPOT
 			}
-		}
-		return value, bestMove
-	}
-	
-
-	value := 1000000
-	bestMove := 0
-
-	r := rand.Perm(7)
-
-	for _, i := range r{
-		if col[i] < 5 {
-			drop(board, i, playerToColor[color])
-			val, _ := minimax(board, true, depth + 1)
-			if(value > val){
-				bestMove = i
-				value = val
-			}
-			col[i]--
-			board[5 - col[i]][i] = EMPTY_SPOT
 		}
 	}
 	return value, bestMove
 }
 
-func playAgainstAi(){
+func playAgainstAi() {
 	humanColor := PLAYER_ONE_COLOR
 	aiColor := PLAYER_TWO_COLOR
 	waiting := false
@@ -257,7 +245,7 @@ func main() {
 		var ip string
 		fmt.Scan(&ip)
 
-		conn, _ = net.Dial("tcp", ip + PORT)
+		conn, _ = net.Dial("tcp", ip+PORT)
 		waiting = false
 
 	} else if option == "2" {
