@@ -15,14 +15,14 @@ var clear map[string]func() //create a map for storing clear funcs
 var board [][]string
 var col []int = make([]int, BOARD_WIDTH)
 
-const PORT string = ":12345"
+const PORT string = ":37432"
 const BOARD_WIDTH int = 7
 const BOARD_HEIGHT int = 6
 const EMPTY_SPOT string = "_"
 const PLAYER_ONE_COLOR string = "○"
 const PLAYER_TWO_COLOR string = "◙"
 const MIN_DIFFICULTY int = 1
-const MAX_DIFFICULTY int = 12
+const MAX_DIFFICULTY int = 7
 
 func init() {
 	clear = make(map[string]func()) //Initialize it
@@ -64,7 +64,7 @@ func printBoard(board [][]string) {
 	fmt.Println()
 	for i := 0; i < len(board); i++ {
 		for j := 0; j < len(board[0]); j++ {
-			fmt.printBoard(board[i][j] + " ")
+			fmt.Print(board[i][j] + " ")
 		}
 		fmt.Println()
 	}
@@ -130,7 +130,7 @@ func areFourConnected(board [][]string, player string) bool {
 const BIG int = 100000
 const SMALL int = -BIG
 
-func minimax(board [][]string, maximizer bool, depth, alpha, beta, max_depth int) (int, int) {
+func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) {
 	if areFourConnected(board, PLAYER_TWO_COLOR) {
 		return BIG - depth, -1
 	} else if areFourConnected(board, PLAYER_ONE_COLOR) {
@@ -147,29 +147,22 @@ func minimax(board [][]string, maximizer bool, depth, alpha, beta, max_depth int
 		value = SMALL
 		for _, i := range shuffledColumns {
 			if drop(board, i, PLAYER_TWO_COLOR) {
-				val, _ := minimax(board, false, depth + 1, alpha, beta, max_depth)
+				val, _ := minimax(board, false, depth + 1, max_depth)
 				if value < val {
 					bestMove = i
 					value = val
 				}
-				//undo the move(backtracking)
+				// undo the move(backtracking)
 				col[i]--
 				board[5-col[i]][i] = EMPTY_SPOT
-
-				if(alpha < value){
-					alpha = value
-				}
-				if(alpha >= beta){
-					break
-				}
 			}
 		}
 		return value, bestMove
 	}else {
-		value := BIG
+		value = BIG
 		for _, i := range shuffledColumns {
 			if drop(board, i, PLAYER_ONE_COLOR) {
-				val, _ := minimax(board, true, depth + 1, alpha, beta, max_depth)
+				val, _ := minimax(board, true, depth + 1, max_depth)
 				if value > val {
 					bestMove = i
 					value = val
@@ -177,13 +170,6 @@ func minimax(board [][]string, maximizer bool, depth, alpha, beta, max_depth int
 				//undo the move(backtracking)
 				col[i]--
 				board[5-col[i]][i] = EMPTY_SPOT
-
-				if(beta >= value){
-					beta = value
-				}
-				if(alpha >= beta){
-					break
-				}
 			}
 		}
 	}
@@ -192,7 +178,7 @@ func minimax(board [][]string, maximizer bool, depth, alpha, beta, max_depth int
 
 func playAgainstAi() {
 
-	fmt.Printf("Choose difficulty (number between 1 and 12), %d - easy, %d - insane\n", MIN_DIFFICULTY, MAX_DIFFICULTY)
+	fmt.Printf("Choose difficulty (number between 1 and 7), %d - easy, %d - hard\n", MIN_DIFFICULTY, MAX_DIFFICULTY)
 	var option string
 	fmt.Scan(&option)
 	
@@ -215,7 +201,7 @@ func playAgainstAi() {
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			_, bestMove := minimax(board, false, 0, SMALL, BIG, difficulty)
+			_, bestMove := minimax(board, true, 0, difficulty)
 			drop(board, bestMove, aiColor)
 			waiting = false
 		} else {
@@ -278,7 +264,7 @@ func main() {
 		var ip string
 		fmt.Scan(&ip)
 
-		conn, _ = net.Dial("tcp", ip+PORT)
+		conn, _ = net.Dial("tcp", ip + PORT)
 		waiting = false
 
 	} else if option == "2" {
@@ -293,7 +279,7 @@ func main() {
 		conn, err = ln.Accept()
 
 		if err == nil {
-			fmt.printBoard("A friend has connected! The game will begin soon!")
+			fmt.Println("A friend has connected! The game will begin soon!")
 			time.Sleep(1 * time.Second)
 		}
 	}
