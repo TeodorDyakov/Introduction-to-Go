@@ -25,6 +25,8 @@ const MIN_DIFFICULTY int = 1
 const MAX_DIFFICULTY int = 7
 
 func init() {
+	rand.Seed(time.Now().UnixNano())
+
 	clear = make(map[string]func()) //Initialize it
 	clear["linux"] = func() {
 		cmd := exec.Command("clear") //Linux example, its tested
@@ -228,6 +230,11 @@ func playAgainstAi() {
 	} else {
 		fmt.Println("You lost.")
 	}
+}
+
+func centralServer(){
+	var err error
+	conn, err = ln.Accept()
 }
 
 func main() {
