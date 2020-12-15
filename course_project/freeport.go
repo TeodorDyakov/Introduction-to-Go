@@ -1,5 +1,0 @@
-package freeport
-
-import (
-	"net"
-)

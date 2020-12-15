@@ -5,41 +5,13 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"os/exec"
-	"runtime"
 	"strconv"
 	"time"
 )
 
-var clear map[string]func() //create a map for storing clear funcs
-var board [][]string
-var col []int = make([]int, BOARD_WIDTH)
-
-const PORT string = ":37432"
-const BOARD_WIDTH int = 7
-const BOARD_HEIGHT int = 6
-const EMPTY_SPOT string = "_"
-const PLAYER_ONE_COLOR string = "○"
-const PLAYER_TWO_COLOR string = "◙"
-const MIN_DIFFICULTY int = 1
-const MAX_DIFFICULTY int = 7
-
 func init() {
 	rand.Seed(time.Now().UnixNano())
-
-	clear = make(map[string]func()) //Initialize it
-	clear["linux"] = func() {
-		cmd := exec.Command("clear") //Linux example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
-	clear["windows"] = func() {
-		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
-
-	//initialize the connect 4 board
+		//initialize the connect 4 board
 	for i := 0; i < BOARD_HEIGHT; i++ {
 		row := make([]string, BOARD_WIDTH)
 
@@ -50,14 +22,16 @@ func init() {
 	}
 }
 
-func clearConsole() {
-	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
-	if ok {                          //if we defined a clear func for that platform:
-		value() //we execute it
-	} else { //unsupported platform
-		panic("Your platform is unsupported! I can't clear terminal screen :(")
-	}
-}
+var board [][]string
+var col []int = make([]int, BOARD_WIDTH)
+
+const BOARD_WIDTH int = 7
+const BOARD_HEIGHT int = 6
+const EMPTY_SPOT string = "_"
+const PLAYER_ONE_COLOR string = "○"
+const PLAYER_TWO_COLOR string = "◙"
+const MIN_DIFFICULTY int = 1
+const MAX_DIFFICULTY int = 7
 
 func printBoard(board [][]string) {
 	for i := 0; i < len(board[0]); i++ {
@@ -178,6 +152,13 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 	return value, bestMove
 }
 
+// Application constants, defining host, port, and protocol.
+const (
+	connHost = "localhost"
+	connPort = "12345"
+	connType = "tcp"
+)
+
 func playAgainstAi() {
 
 	fmt.Printf("Choose difficulty (number between 1 and 7), %d - easy, %d - hard\n", MIN_DIFFICULTY, MAX_DIFFICULTY)
@@ -232,27 +213,20 @@ func playAgainstAi() {
 	}
 }
 
-func centralServer(){
-	var err error
-	conn, err = ln.Accept()
-}
-
 func main() {
 
 	fmt.Println("Hello! Welcome to connect four CMD!\n" +
-		"To connect to a friend ip: Enter [1]\n" +
-		"To wait for friend to connect to you enter [2]\n" +
-		"To play against AI, enter [3]")
+		"To enter multiplayer lobby press [1]\n" + "To play against AI press [2]\n")
 
 	var option string
 	fmt.Scan(&option)
 
-	for !(option == "1" || option == "2" || option == "3") {
+	for !(option == "1" || option == "2") {
 		fmt.Println("Unknown command! Try again:")
 		fmt.Scan(&option)
 	}
 
-	if option == "3" {
+	if option == "2" {
 		playAgainstAi()
 		return
 	}
@@ -260,35 +234,29 @@ func main() {
 	var conn net.Conn
 	var color string
 	var opponentColor string
+	
 	waiting := true
 
-	if option == "1" {
+	fmt.Println("Connecting to", connType, "server", connHost+":"+connPort)
+	conn, err := net.Dial(connType, connHost+":"+connPort)
+	if err != nil {
+		fmt.Println("Error connecting:", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("searching for opponent...")
+
+	var msg string
+	fmt.Fscan(conn, &msg)
+	// fmt.Println(msg)
+
+	if msg == "go"{
 		color = PLAYER_ONE_COLOR
 		opponentColor = PLAYER_TWO_COLOR
-
-		fmt.Println("Enter friends IP:")
-
-		var ip string
-		fmt.Scan(&ip)
-
-		conn, _ = net.Dial("tcp", ip + PORT)
 		waiting = false
-
-	} else if option == "2" {
+	}else{
 		color = PLAYER_TWO_COLOR
 		opponentColor = PLAYER_ONE_COLOR
-
-		ln, _ := net.Listen("tcp", PORT)
-
-		fmt.Println("Waiting for a friend...")
-
-		var err error
-		conn, err = ln.Accept()
-
-		if err == nil {
-			fmt.Println("A friend has connected! The game will begin soon!")
-			time.Sleep(1 * time.Second)
-		}
+		waiting = true
 	}
 
 	for !areFourConnected(board, color) && !areFourConnected(board, opponentColor) {
@@ -298,11 +266,26 @@ func main() {
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			var message string
-			fmt.Fscan(conn, &message)
-			otherPlayerColumn, _ := strconv.Atoi(message)
-			drop(board, otherPlayerColumn, opponentColor)
-			waiting = false
+			
+			c1 := make(chan string, 1)
+				
+			go func(){
+				var message string
+				fmt.Fscan(conn, &message)
+				c1 <- message	
+			}()
+			
+			var colString string
+			select {
+		    case colString = <-c1:
+		    	otherPlayerColumn, _ := strconv.Atoi(colString)
+				drop(board, otherPlayerColumn, opponentColor)
+				waiting = false
+		    case <-time.After(60 * time.Second):
+		        fmt.Println("timeout Opponent failed to make a move in 60 seconds")
+		        return
+		    }
+
 		} else {
 			for {
 				fmt.Printf("Enter column to drop: ")
@@ -320,6 +303,8 @@ func main() {
 			}
 		}
 	}
+	
+	fmt.Fprintf(conn, "end")
 
 	clearConsole()
 	printBoard(board)
