@@ -1,4 +1,5 @@
 package main
+
 import (
 	"fmt"
 )
@@ -6,14 +7,14 @@ import (
 var board [][]string
 var col []int = make([]int, BOARD_WIDTH)
 
-const(
-	BOARD_WIDTH = 7
+const (
+	BOARD_WIDTH  = 7
 	BOARD_HEIGHT = 6
-	EMPTY_SPOT = "_"
+	EMPTY_SPOT   = "_"
 )
 
 func init() {
-		//initialize the connect 4 board
+	//initialize the connect 4 board
 	for i := 0; i < BOARD_HEIGHT; i++ {
 		row := make([]string, BOARD_WIDTH)
 

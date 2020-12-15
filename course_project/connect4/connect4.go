@@ -9,16 +9,16 @@ import (
 	"time"
 )
 
-const(
-	connHost = "localhost"
-	connPort = "12345"
-	connType = "tcp"
-	BIG = 100000
-	SMALL = -BIG
+const (
+	CONN_HOST        = "localhost"
+	CONN_PORT        = "12345"
+	CONN_TYPE        = "tcp"
+	BIG              = 100000
+	SMALL            = -BIG
 	PLAYER_ONE_COLOR = "○"
 	PLAYER_TWO_COLOR = "◙"
-	MIN_DIFFICULTY = 1
-	MAX_DIFFICULTY = 7
+	MIN_DIFFICULTY   = 1
+	MAX_DIFFICULTY   = 7
 )
 
 func init() {
@@ -42,7 +42,7 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 		value = SMALL
 		for _, i := range shuffledColumns {
 			if drop(board, i, PLAYER_TWO_COLOR) {
-				val, _ := minimax(board, false, depth + 1, max_depth)
+				val, _ := minimax(board, false, depth+1, max_depth)
 				if value < val {
 					bestMove = i
 					value = val
@@ -53,11 +53,11 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 			}
 		}
 		return value, bestMove
-	}else {
+	} else {
 		value = BIG
 		for _, i := range shuffledColumns {
 			if drop(board, i, PLAYER_ONE_COLOR) {
-				val, _ := minimax(board, true, depth + 1, max_depth)
+				val, _ := minimax(board, true, depth+1, max_depth)
 				if value > val {
 					bestMove = i
 					value = val
@@ -76,7 +76,7 @@ func playAgainstAi() {
 	fmt.Printf("Choose difficulty (number between 1 and 7), %d - easy, %d - hard\n", MIN_DIFFICULTY, MAX_DIFFICULTY)
 	var option string
 	fmt.Scan(&option)
-	
+
 	difficulty, err := strconv.Atoi(option)
 
 	for err != nil || difficulty < MIN_DIFFICULTY || difficulty > MAX_DIFFICULTY {
@@ -125,15 +125,15 @@ func playAgainstAi() {
 	}
 }
 
-func playMultiplayer(){
+func playMultiplayer() {
 	var conn net.Conn
 	var color string
 	var opponentColor string
-	
+
 	waiting := true
 
-	fmt.Println("Connecting to", connType, "server", connHost+":"+connPort)
-	conn, err := net.Dial(connType, connHost+":"+connPort)
+	fmt.Println("Connecting to", CONN_TYPE, "server", CONN_HOST+":"+CONN_PORT)
+	conn, err := net.Dial(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)
@@ -144,11 +144,11 @@ func playMultiplayer(){
 	fmt.Fscan(conn, &msg)
 	// fmt.Println(msg)
 
-	if msg == "go"{
+	if msg == "go" {
 		color = PLAYER_ONE_COLOR
 		opponentColor = PLAYER_TWO_COLOR
 		waiting = false
-	}else{
+	} else {
 		color = PLAYER_TWO_COLOR
 		opponentColor = PLAYER_ONE_COLOR
 		waiting = true
@@ -161,25 +161,25 @@ func playMultiplayer(){
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			
+
 			c1 := make(chan string, 1)
-				
-			go func(){
+
+			go func() {
 				var message string
 				fmt.Fscan(conn, &message)
-				c1 <- message	
+				c1 <- message
 			}()
-			
+
 			var colString string
 			select {
-		    case colString = <-c1:
-		    	otherPlayerColumn, _ := strconv.Atoi(colString)
+			case colString = <-c1:
+				otherPlayerColumn, _ := strconv.Atoi(colString)
 				drop(board, otherPlayerColumn, opponentColor)
 				waiting = false
-		    case <-time.After(60 * time.Second):
-		        fmt.Println("timeout Opponent failed to make a move in 60 seconds")
-		        return
-		    }
+			case <-time.After(60 * time.Second):
+				fmt.Println("timeout Opponent failed to make a move in 60 seconds")
+				return
+			}
 
 		} else {
 			for {
@@ -198,7 +198,7 @@ func playMultiplayer(){
 			}
 		}
 	}
-	
+
 	fmt.Fprintf(conn, "end")
 
 	clearConsole()
@@ -226,7 +226,7 @@ func main() {
 	if option == "2" {
 		playAgainstAi()
 		return
-	} else{
+	} else {
 		playMultiplayer()
 	}
 

@@ -9,17 +9,17 @@ import (
 
 // Application constants, defining host, port, and protocol.
 const (
-	connHost = "localhost"
-	connPort = "12345"
-	connType = "tcp"
+	CONN_HOST = "localhost"
+	CONN_PORT = "12345"
+	CONN_TYPE = "tcp"
 )
 
 var playerOne net.Conn
 
 func main() {
 	// Start the server and listen for incoming connections.
-	fmt.Println("Starting " + connType + " server on " + connHost + ":" + connPort)
-	l, err := net.Listen(connType, connHost+":"+connPort)
+	fmt.Println("Starting " + CONN_TYPE + " server on " + CONN_HOST + ":" + CONN_PORT)
+	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
@@ -38,7 +38,7 @@ func main() {
 		fmt.Println("Client connected.")
 		fmt.Println("Client " + c.RemoteAddr().String() + " connected.")
 
-		if playerOne == nil{
+		if playerOne == nil {
 			playerOne = c
 		} else {
 			fmt.Fprint(c, "wait\n")
@@ -51,12 +51,12 @@ func main() {
 }
 
 func handleConnection(conn1, conn2 net.Conn) {
-	for{
+	for {
 		var msg string
 		fmt.Fscan(conn1, &msg)
 		fmt.Fprintf(conn2, "%s\n", msg)
 
-		if(msg == "end"){
+		if msg == "end" {
 			conn1.Close()
 			conn2.Close()
 			return
