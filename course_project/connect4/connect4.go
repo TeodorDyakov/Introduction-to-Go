@@ -9,105 +9,20 @@ import (
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-		//initialize the connect 4 board
-	for i := 0; i < BOARD_HEIGHT; i++ {
-		row := make([]string, BOARD_WIDTH)
-
-		for i := 0; i < len(row); i++ {
-			row[i] = EMPTY_SPOT
-		}
-		board = append(board, row)
-	}
-}
-
-var board [][]string
-var col []int = make([]int, BOARD_WIDTH)
-
 const(
 	connHost = "localhost"
 	connPort = "12345"
 	connType = "tcp"
 	BIG = 100000
 	SMALL = -BIG
-	BOARD_WIDTH = 7
-	BOARD_HEIGHT = 6
-	EMPTY_SPOT = "_"
 	PLAYER_ONE_COLOR = "○"
 	PLAYER_TWO_COLOR = "◙"
 	MIN_DIFFICULTY = 1
 	MAX_DIFFICULTY = 7
 )
 
-func printBoard(board [][]string) {
-	for i := 0; i < len(board[0]); i++ {
-		fmt.Printf("%d ", i)
-	}
-	fmt.Println()
-	for i := 0; i < len(board); i++ {
-		for j := 0; j < len(board[0]); j++ {
-			fmt.Print(board[i][j] + " ")
-		}
-		fmt.Println()
-	}
-}
-
-func drop(board [][]string, column int, player string) bool {
-	if column < len(board[0]) && col[column] < len(board) {
-		board[5-col[column]][column] = player
-		col[column]++
-		return true
-	}
-	return false
-}
-
-func areFourConnected(board [][]string, player string) bool {
-	// horizontalCheck
-	for j := 0; j < len(board[0])-3; j++ {
-		for i := 0; i < len(board); i++ {
-			if board[i][j] == player &&
-				board[i][j+1] == player &&
-				board[i][j+2] == player &&
-				board[i][j+3] == player {
-				return true
-			}
-		}
-	}
-	// verticalCheck
-	for i := 0; i < len(board)-3; i++ {
-		for j := 0; j < len(board[0]); j++ {
-			if board[i][j] == player &&
-				board[i+1][j] == player &&
-				board[i+2][j] == player &&
-				board[i+3][j] == player {
-				return true
-			}
-		}
-	}
-	// ascendingDiagonalCheck
-	for i := 3; i < len(board); i++ {
-		for j := 0; j < len(board[0])-3; j++ {
-			if board[i][j] == player &&
-				board[i-1][j+1] == player &&
-				board[i-2][j+2] == player &&
-				board[i-3][j+3] == player {
-				return true
-			}
-		}
-	}
-	// descendingDiagonalCheck
-	for i := 3; i < len(board); i++ {
-		for j := 3; j < len(board[0]); j++ {
-			if board[i][j] == player &&
-				board[i-1][j-1] == player &&
-				board[i-2][j-2] == player &&
-				board[i-3][j-3] == player {
-				return true
-			}
-		}
-	}
-	return false
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) {
@@ -210,24 +125,7 @@ func playAgainstAi() {
 	}
 }
 
-func main() {
-
-	fmt.Println("Hello! Welcome to connect four CMD!\n" +
-		"To enter multiplayer lobby press [1]\n" + "To play against AI press [2]\n")
-
-	var option string
-	fmt.Scan(&option)
-
-	for !(option == "1" || option == "2") {
-		fmt.Println("Unknown command! Try again:")
-		fmt.Scan(&option)
-	}
-
-	if option == "2" {
-		playAgainstAi()
-		return
-	}
-
+func playMultiplayer(){
 	var conn net.Conn
 	var color string
 	var opponentColor string
@@ -309,6 +207,27 @@ func main() {
 		fmt.Println("You won!")
 	} else {
 		fmt.Println("You lost.")
+	}
+}
+
+func main() {
+
+	fmt.Println("Hello! Welcome to connect four CMD!\n" +
+		"To enter multiplayer lobby press [1]\n" + "To play against AI press [2]\n")
+
+	var option string
+	fmt.Scan(&option)
+
+	for !(option == "1" || option == "2") {
+		fmt.Println("Unknown command! Try again:")
+		fmt.Scan(&option)
+	}
+
+	if option == "2" {
+		playAgainstAi()
+		return
+	} else{
+		playMultiplayer()
 	}
 
 }
