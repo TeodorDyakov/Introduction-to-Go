@@ -25,13 +25,18 @@ func init() {
 var board [][]string
 var col []int = make([]int, BOARD_WIDTH)
 
-const BOARD_WIDTH int = 7
-const BOARD_HEIGHT int = 6
-const EMPTY_SPOT string = "_"
-const PLAYER_ONE_COLOR string = "○"
-const PLAYER_TWO_COLOR string = "◙"
-const MIN_DIFFICULTY int = 1
-const MAX_DIFFICULTY int = 7
+const(
+	connHost = "localhost"
+	connPort = "12345"
+	connType = "tcp"
+	BOARD_WIDTH = 7
+	BOARD_HEIGHT = 6
+	EMPTY_SPOT = "_"
+	PLAYER_ONE_COLOR = "○"
+	PLAYER_TWO_COLOR = "◙"
+	MIN_DIFFICULTY = 1
+	MAX_DIFFICULTY = 7
+)
 
 func printBoard(board [][]string) {
 	for i := 0; i < len(board[0]); i++ {
@@ -154,9 +159,7 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 
 // Application constants, defining host, port, and protocol.
 const (
-	connHost = "localhost"
-	connPort = "12345"
-	connType = "tcp"
+
 )
 
 func playAgainstAi() {
