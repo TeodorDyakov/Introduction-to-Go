@@ -19,7 +19,7 @@ var playerOne net.Conn
 func main() {
 	// Start the server and listen for incoming connections.
 	fmt.Println("Starting " + CONN_TYPE + " server on " + CONN_HOST + ":" + CONN_PORT)
-	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	l, err := net.Listen(CONN_TYPE, CONN_HOST + ":" + CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
@@ -51,19 +51,30 @@ func main() {
 }
 
 func handleConnection(conn1, conn2 net.Conn) {
-	for {
-		var msg string
-		fmt.Fscan(conn1, &msg)
-		fmt.Fprintf(conn2, "%s\n", msg)
+	defer conn1.Close()
+	defer conn2.Close()
 
-		if msg == "end" {
-			conn1.Close()
-			conn2.Close()
+	for{
+		var msg string
+		_, err := fmt.Fscan(conn1, &msg)
+		if err != nil{
+			fmt.Println("Client " + conn1.RemoteAddr().String() + " disconnected.")
 			return
 		}
 
+		fmt.Fprintf(conn2, "%s\n", msg)
+
 		var msg1 string
-		fmt.Fscan(conn2, &msg1)
+		_, err = fmt.Fscan(conn2, &msg1)
+		if err != nil{
+			fmt.Println("Client " + conn2.RemoteAddr().String() + " disconnected.")
+			return
+		}
+
 		fmt.Fprintf(conn1, "%s\n", msg1)
+
+		if msg1 == "end" || msg == "end" {
+			return
+		}
 	}
 }
