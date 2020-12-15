@@ -14,7 +14,7 @@ const (
 	CONN_TYPE = "tcp"
 )
 
-var playerOne net.Conn
+var playerOneConn net.Conn
 
 func main() {
 	// Start the server and listen for incoming connections.
@@ -30,50 +30,46 @@ func main() {
 	// run loop forever, until exit.
 	for {
 		// Listen for an incoming connection.
-		c, err := l.Accept()
+		conn, err := l.Accept()
 		if err != nil {
 			fmt.Println("Error connecting:", err.Error())
 			return
 		}
 		fmt.Println("Client connected.")
-		fmt.Println("Client " + c.RemoteAddr().String() + " connected.")
+		fmt.Println("Client " + conn.RemoteAddr().String() + " connected.")
 
-		if playerOne == nil {
-			playerOne = c
+		if playerOneConn == nil {
+			playerOneConn = conn
 		} else {
-			fmt.Fprint(c, "wait\n")
-			fmt.Fprint(playerOne, "go\n")
+			fmt.Fprint(conn, "wait\n")
+			fmt.Fprint(playerOneConn, "go\n")
 
-			go handleConnection(playerOne, c)
-			playerOne = nil
+			go handleConnection(playerOneConn, conn)
+			playerOneConn = nil
 		}
 	}
+}
+
+func readMsgAndSend(from, to net.Conn) bool{
+	var msg string
+	_, err := fmt.Fscan(from, &msg)
+	if err != nil{
+		fmt.Println("Client " + from.RemoteAddr().String() + " disconnected.")
+		return false
+	}
+	fmt.Fprintf(to, "%s\n", msg)
+	return true
 }
 
 func handleConnection(conn1, conn2 net.Conn) {
 	defer conn1.Close()
 	defer conn2.Close()
-
+	
 	for{
-		var msg string
-		_, err := fmt.Fscan(conn1, &msg)
-		if err != nil{
-			fmt.Println("Client " + conn1.RemoteAddr().String() + " disconnected.")
+		if !readMsgAndSend(conn1, conn2){
 			return
 		}
-
-		fmt.Fprintf(conn2, "%s\n", msg)
-
-		var msg1 string
-		_, err = fmt.Fscan(conn2, &msg1)
-		if err != nil{
-			fmt.Println("Client " + conn2.RemoteAddr().String() + " disconnected.")
-			return
-		}
-
-		fmt.Fprintf(conn1, "%s\n", msg1)
-
-		if msg1 == "end" || msg == "end" {
+		if !readMsgAndSend(conn2, conn1){
 			return
 		}
 	}
