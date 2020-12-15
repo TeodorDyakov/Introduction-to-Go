@@ -29,6 +29,8 @@ const(
 	connHost = "localhost"
 	connPort = "12345"
 	connType = "tcp"
+	BIG = 100000
+	SMALL = -BIG
 	BOARD_WIDTH = 7
 	BOARD_HEIGHT = 6
 	EMPTY_SPOT = "_"
@@ -108,9 +110,6 @@ func areFourConnected(board [][]string, player string) bool {
 	return false
 }
 
-const BIG int = 100000
-const SMALL int = -BIG
-
 func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) {
 	if areFourConnected(board, PLAYER_TWO_COLOR) {
 		return BIG - depth, -1
@@ -156,11 +155,6 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 	}
 	return value, bestMove
 }
-
-// Application constants, defining host, port, and protocol.
-const (
-
-)
 
 func playAgainstAi() {
 
