@@ -21,15 +21,17 @@ const (
 	MAX_DIFFICULTY   = 7
 )
 
+var b *Board = NewBoard()
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) {
-	if areFourConnected(board, PLAYER_TWO_COLOR) {
-		return BIG - depth, -1
-	} else if areFourConnected(board, PLAYER_ONE_COLOR) {
-		return SMALL + depth, -1
+func minimax(maximizer bool, depth, max_depth int) (int, int) {
+	if b.areFourConnected(PLAYER_TWO_COLOR) {
+		return BIG - depth, - 1
+	} else if b.areFourConnected(PLAYER_ONE_COLOR) {
+		return SMALL + depth, - 1
 	} else if depth == max_depth {
 		return 0, -1
 	}
@@ -40,31 +42,26 @@ func minimax(board [][]string, maximizer bool, depth, max_depth int) (int, int) 
 
 	if maximizer {
 		value = SMALL
-		for _, i := range shuffledColumns {
-			if drop(board, i, PLAYER_TWO_COLOR) {
-				val, _ := minimax(board, false, depth+1, max_depth)
+		for _, column := range shuffledColumns {
+			if b.drop(column, PLAYER_TWO_COLOR) {
+				val, _ := minimax(false, depth + 1, max_depth)
 				if value < val {
-					bestMove = i
+					bestMove = column
 					value = val
 				}
-				// undo the move(backtracking)
-				col[i]--
-				board[5-col[i]][i] = EMPTY_SPOT
+				b.undoDrop(column)
 			}
 		}
-		return value, bestMove
 	} else {
 		value = BIG
-		for _, i := range shuffledColumns {
-			if drop(board, i, PLAYER_ONE_COLOR) {
-				val, _ := minimax(board, true, depth+1, max_depth)
+		for _, column := range shuffledColumns {
+			if b.drop(column, PLAYER_ONE_COLOR) {
+				val, _ := minimax(true, depth + 1, max_depth)
 				if value > val {
-					bestMove = i
+					bestMove = column
 					value = val
 				}
-				//undo the move(backtracking)
-				col[i]--
-				board[5-col[i]][i] = EMPTY_SPOT
+				b.undoDrop(column)
 			}
 		}
 	}
@@ -89,24 +86,24 @@ func playAgainstAi() {
 	aiColor := PLAYER_TWO_COLOR
 	waiting := false
 
-	for !areFourConnected(board, humanColor) && !areFourConnected(board, aiColor) {
+	for !b.areFourConnected(humanColor) && !b.areFourConnected(aiColor) {
 
 		clearConsole()
-		printBoard(board)
+		b.printBoard()
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			_, bestMove := minimax(board, true, 0, difficulty)
-			drop(board, bestMove, aiColor)
+			_, bestMove := minimax(true, 0, difficulty)
+			b.drop(bestMove, aiColor)
 			waiting = false
 		} else {
 			for {
 				fmt.Printf("Enter column to drop: ")
 
 				var column int
-				fmt.Scan(&column)
+				_, err = fmt.Scan(&column)
 
-				if column >= len(board[0]) || column < 0 || !drop(board, column, humanColor) {
+				if err != nil || !b.drop(column, humanColor) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
 					waiting = true
@@ -117,8 +114,8 @@ func playAgainstAi() {
 	}
 
 	clearConsole()
-	printBoard(board)
-	if areFourConnected(board, humanColor) {
+	b.printBoard()
+	if b.areFourConnected(humanColor) {
 		fmt.Println("You won!")
 	} else {
 		fmt.Println("You lost.")
@@ -130,10 +127,10 @@ func playMultiplayer() {
 	var color string
 	var opponentColor string
 
-	waiting := true
+	var waiting bool
 
-	fmt.Println("Connecting to", CONN_TYPE, "server", CONN_HOST+":"+CONN_PORT)
-	conn, err := net.Dial(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	fmt.Println("Connecting to", CONN_TYPE, "server", CONN_HOST + ":" + CONN_PORT)
+	conn, err := net.Dial(CONN_TYPE, CONN_HOST + ":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)
@@ -142,7 +139,6 @@ func playMultiplayer() {
 
 	var msg string
 	fmt.Fscan(conn, &msg)
-	// fmt.Println(msg)
 
 	if msg == "go" {
 		color = PLAYER_ONE_COLOR
@@ -154,10 +150,10 @@ func playMultiplayer() {
 		waiting = true
 	}
 
-	for !areFourConnected(board, color) && !areFourConnected(board, opponentColor) {
+	for !b.areFourConnected(color) && !b.areFourConnected(opponentColor) {
 
 		clearConsole()
-		printBoard(board)
+		b.printBoard()
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
@@ -174,7 +170,7 @@ func playMultiplayer() {
 			select {
 			case colString = <-c1:
 				otherPlayerColumn, _ := strconv.Atoi(colString)
-				drop(board, otherPlayerColumn, opponentColor)
+				b.drop(otherPlayerColumn, opponentColor)
 				waiting = false
 			case <-time.After(60 * time.Second):
 				fmt.Println("timeout Opponent failed to make a move in 60 seconds")
@@ -186,9 +182,9 @@ func playMultiplayer() {
 				fmt.Printf("Enter column to drop: ")
 
 				var column int
-				fmt.Scan(&column)
-
-				if column >= len(board[0]) || column < 0 || !drop(board, column, color) {
+				_, err = fmt.Scan(&column)
+				
+				if err != nil || !b.drop(column, color) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
 					fmt.Fprintf(conn, "%d\n", column)
@@ -202,8 +198,8 @@ func playMultiplayer() {
 	fmt.Fprintf(conn, "end")
 
 	clearConsole()
-	printBoard(board)
-	if areFourConnected(board, color) {
+	b.printBoard()
+	if b.areFourConnected(color) {
 		fmt.Println("You won!")
 	} else {
 		fmt.Println("You lost.")
