@@ -18,7 +18,7 @@ const (
 	PLAYER_ONE_COLOR = "○"
 	PLAYER_TWO_COLOR = "◙"
 	MIN_DIFFICULTY   = 1
-	MAX_DIFFICULTY   = 7
+	MAX_DIFFICULTY   = 10
 )
 
 var b *Board = NewBoard()
@@ -27,50 +27,9 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func minimax(maximizer bool, depth, max_depth int) (int, int) {
-	if b.areFourConnected(PLAYER_TWO_COLOR) {
-		return BIG - depth, - 1
-	} else if b.areFourConnected(PLAYER_ONE_COLOR) {
-		return SMALL + depth, - 1
-	} else if depth == max_depth {
-		return 0, -1
-	}
-
-	var value int
-	var bestMove int
-	shuffledColumns := rand.Perm(7)
-
-	if maximizer {
-		value = SMALL
-		for _, column := range shuffledColumns {
-			if b.drop(column, PLAYER_TWO_COLOR) {
-				val, _ := minimax(false, depth + 1, max_depth)
-				if value < val {
-					bestMove = column
-					value = val
-				}
-				b.undoDrop(column)
-			}
-		}
-	} else {
-		value = BIG
-		for _, column := range shuffledColumns {
-			if b.drop(column, PLAYER_ONE_COLOR) {
-				val, _ := minimax(true, depth + 1, max_depth)
-				if value > val {
-					bestMove = column
-					value = val
-				}
-				b.undoDrop(column)
-			}
-		}
-	}
-	return value, bestMove
-}
-
 func playAgainstAi() {
 
-	fmt.Printf("Choose difficulty (number between 1 and 7), %d - easy, %d - hard\n", MIN_DIFFICULTY, MAX_DIFFICULTY)
+	fmt.Printf("Choose difficulty (number between %d and %d)", MIN_DIFFICULTY, MAX_DIFFICULTY)
 	var option string
 	fmt.Scan(&option)
 
@@ -93,7 +52,7 @@ func playAgainstAi() {
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
-			_, bestMove := minimax(true, 0, difficulty)
+			_, bestMove := alphabeta(b, true, 0, SMALL, BIG, difficulty)
 			b.drop(bestMove, aiColor)
 			waiting = false
 		} else {
@@ -158,18 +117,16 @@ func playMultiplayer() {
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
 
-			c1 := make(chan string, 1)
+			c1 := make(chan int, 1)
 
 			go func() {
-				var message string
-				fmt.Fscan(conn, &message)
-				c1 <- message
+				var column int
+				fmt.Fscan(conn, &column)
+				c1 <- column
 			}()
 
-			var colString string
 			select {
-			case colString = <-c1:
-				otherPlayerColumn, _ := strconv.Atoi(colString)
+			case otherPlayerColumn := <-c1:
 				b.drop(otherPlayerColumn, opponentColor)
 				waiting = false
 			case <-time.After(60 * time.Second):
