@@ -64,7 +64,7 @@ func readMsgAndSend(from, to net.Conn) bool{
 func handleConnection(conn1, conn2 net.Conn) {
 	defer conn1.Close()
 	defer conn2.Close()
-	
+
 	for{
 		if !readMsgAndSend(conn1, conn2){
 			return
