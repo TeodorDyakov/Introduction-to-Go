@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"net"
-	"os"
-	// "time"
+	"math/rand"
+	"time"
 )
 
 // Application constants, defining host, port, and protocol.
@@ -14,40 +14,71 @@ const (
 	CONN_TYPE = "tcp"
 )
 
-var playerOneConn net.Conn
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func generateToken() string{
+	token := ""
+	for  i := 0; i < 5; i++{
+		token += string(rune(rand.Intn(26) + 'A'))
+	}
+	return token
+}
 
 func main() {
+	tokenToConn := make(map[string]net.Conn)
+	connectors := make(chan net.Conn, 128)
+	waiters := make(chan net.Conn, 128)
+
 	// Start the server and listen for incoming connections.
-	fmt.Println("Starting " + CONN_TYPE + " server on " + CONN_HOST + ":" + CONN_PORT)
-	l, err := net.Listen(CONN_TYPE, CONN_HOST + ":" + CONN_PORT)
-	if err != nil {
-		fmt.Println("Error listening:", err.Error())
-		os.Exit(1)
-	}
-	// Close the listener when the application closes.
-	defer l.Close()
+	listener, err := net.Listen("tcp", ":12345")
+	if err != nil { panic(err) }
 
+	go func(){
 	// run loop forever, until exit.
-	for {
-		// Listen for an incoming connection.
-		conn, err := l.Accept()
-		if err != nil {
-			fmt.Println("Error connecting:", err.Error())
-			return
+		for {
+			// Listen for an incoming connection.
+			conn, err := listener.Accept()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("Client connected.")
+			fmt.Println("Client " + conn.RemoteAddr().String() + " connected.")
+
+			var waitOrConnect string
+			fmt.Fscan(conn, &waitOrConnect)
+			fmt.Printf(waitOrConnect)
+
+			if(waitOrConnect == "connect"){
+				connectors <- conn
+			} else {
+				waiters <- conn
+			}
 		}
-		fmt.Println("Client connected.")
-		fmt.Println("Client " + conn.RemoteAddr().String() + " connected.")
+	}()
 
-		if playerOneConn == nil {
-			playerOneConn = conn
-		} else {
-			fmt.Fprint(conn, "wait\n")
-			fmt.Fprint(playerOneConn, "go\n")
-
-			go handleConnection(playerOneConn, conn)
-			playerOneConn = nil
+	for{
+	select {
+		case conn := <-connectors:
+			opponentToken := ""
+			fmt.Fscan(conn, &opponentToken)
+			// check if conn is in map
+			if connectTo, ok := tokenToConn[opponentToken]; ok{
+				fmt.Fprintf(connectTo, "go\n")
+				fmt.Fprintf(conn, "go\n")		
+				delete(tokenToConn, opponentToken)
+				go handleConnection(conn, connectTo)	
+			}else{
+				//error hanle
+			} 
+		case conn := <-waiters:
+			token := generateToken()
+			fmt.Fprintf(conn, "%s\n", token)
+			tokenToConn[token] = conn
 		}
 	}
+
 }
 
 func readMsgAndSend(from, to net.Conn) bool{

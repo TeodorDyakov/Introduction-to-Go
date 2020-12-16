@@ -41,11 +41,9 @@ func playAgainstAi() {
 		difficulty, err = strconv.Atoi(option)
 	}
 
-	humanColor := PLAYER_ONE_COLOR
-	aiColor := PLAYER_TWO_COLOR
 	waiting := false
 
-	for !b.areFourConnected(humanColor) && !b.areFourConnected(aiColor) {
+	for !b.areFourConnected(PLAYER_ONE_COLOR) && !b.areFourConnected(PLAYER_TWO_COLOR) {
 
 		clearConsole()
 		b.printBoard()
@@ -53,7 +51,7 @@ func playAgainstAi() {
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
 			_, bestMove := alphabeta(b, true, 0, SMALL, BIG, difficulty)
-			b.drop(bestMove, aiColor)
+			b.drop(bestMove, PLAYER_TWO_COLOR)
 			waiting = false
 		} else {
 			for {
@@ -62,7 +60,7 @@ func playAgainstAi() {
 				var column int
 				_, err = fmt.Scan(&column)
 
-				if err != nil || !b.drop(column, humanColor) {
+				if err != nil || !b.drop(column, PLAYER_ONE_COLOR) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
 					waiting = true
@@ -74,7 +72,7 @@ func playAgainstAi() {
 
 	clearConsole()
 	b.printBoard()
-	if b.areFourConnected(humanColor) {
+	if b.areFourConnected(PLAYER_ONE_COLOR) {
 		fmt.Println("You won!")
 	} else {
 		fmt.Println("You lost.")
@@ -94,19 +92,39 @@ func playMultiplayer() {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)
 	}
-	fmt.Println("searching for opponent...")
 
-	var msg string
-	fmt.Fscan(conn, &msg)
+	fmt.Println("enter 1 to make a room or 2 to connect to room")
+	var input int
+	fmt.Scan(&input)
 
-	if msg == "go" {
-		color = PLAYER_ONE_COLOR
-		opponentColor = PLAYER_TWO_COLOR
-		waiting = false
-	} else {
+	if input == 1{
+		fmt.Fprintf(conn, "wait\n")
+
+		var token string
+		fmt.Fscan(conn, &token)
+		fmt.Printf("You token is:%s\n", token)
+		fmt.Println("waiting for a friend to connect...")
+		
+		var msg string
+		fmt.Fscan(conn, &msg)
+		
 		color = PLAYER_TWO_COLOR
 		opponentColor = PLAYER_ONE_COLOR
 		waiting = true
+	} else {
+		fmt.Fprintf(conn, "connect\n")
+
+		var token string
+		fmt.Printf("Enter friend token\n")
+		fmt.Scan(&token)
+		
+		fmt.Fprintf(conn, "%s\n", token)
+		var msg string
+		fmt.Fscan(conn, &msg)
+
+		color = PLAYER_ONE_COLOR
+		opponentColor = PLAYER_TWO_COLOR
+		waiting = false
 	}
 
 	for !b.areFourConnected(color) && !b.areFourConnected(opponentColor) {

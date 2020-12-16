@@ -2,7 +2,12 @@ package main
 
 import(
 	"math/rand"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func alphabeta(b *Board, maximizer bool, depth, alpha, beta, max_depth int) (int, int) {
 	if b.areFourConnected(PLAYER_TWO_COLOR) {
