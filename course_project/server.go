@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"math/rand"
+	"net"
 	"time"
 )
+
+var tokenToConn map[string]net.Conn = make(map[string]net.Conn)
 
 // Application constants, defining host, port, and protocol.
 const (
@@ -18,25 +20,31 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func generateToken() string{
+func generateToken() string {
 	token := ""
-	for  i := 0; i < 5; i++{
-		token += string(rune(rand.Intn(26) + 'A'))
+	for{
+		for i := 0; i < 5; i++ {
+			token += string(rune(rand.Intn(26) + 'A'))
+		}
+		if _, isDup := tokenToConn[token]; !isDup {
+			return token
+		}
 	}
 	return token
 }
 
 func main() {
-	tokenToConn := make(map[string]net.Conn)
 	connectors := make(chan net.Conn, 128)
 	waiters := make(chan net.Conn, 128)
 
 	// Start the server and listen for incoming connections.
 	listener, err := net.Listen("tcp", ":12345")
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
-	go func(){
-	// run loop forever, until exit.
+	go func() {
+		// run loop forever, until exit.
 		for {
 			// Listen for an incoming connection.
 			conn, err := listener.Accept()
@@ -48,30 +56,29 @@ func main() {
 
 			var waitOrConnect string
 			fmt.Fscan(conn, &waitOrConnect)
-			fmt.Printf(waitOrConnect)
 
-			if(waitOrConnect == "connect"){
+			if waitOrConnect == "connect" {
 				connectors <- conn
-			} else {
+			} else if waitOrConnect == "wait" {
 				waiters <- conn
 			}
 		}
 	}()
 
-	for{
-	select {
+	for {
+		select {
 		case conn := <-connectors:
 			opponentToken := ""
 			fmt.Fscan(conn, &opponentToken)
 			// check if conn is in map
-			if connectTo, ok := tokenToConn[opponentToken]; ok{
+			if connectTo, ok := tokenToConn[opponentToken]; ok {
 				fmt.Fprintf(connectTo, "go\n")
-				fmt.Fprintf(conn, "go\n")		
+				fmt.Fprintf(conn, "go\n")
 				delete(tokenToConn, opponentToken)
-				go handleConnection(conn, connectTo)	
-			}else{
+				go handleConnection(conn, connectTo)
+			} else {
 				//error hanle
-			} 
+			}
 		case conn := <-waiters:
 			token := generateToken()
 			fmt.Fprintf(conn, "%s\n", token)
@@ -81,10 +88,10 @@ func main() {
 
 }
 
-func readMsgAndSend(from, to net.Conn) bool{
+func readMsgAndSend(from, to net.Conn) bool {
 	var msg string
 	_, err := fmt.Fscan(from, &msg)
-	if err != nil{
+	if err != nil {
 		fmt.Println("Client " + from.RemoteAddr().String() + " disconnected.")
 		return false
 	}
@@ -96,11 +103,11 @@ func handleConnection(conn1, conn2 net.Conn) {
 	defer conn1.Close()
 	defer conn2.Close()
 
-	for{
-		if !readMsgAndSend(conn1, conn2){
+	for {
+		if !readMsgAndSend(conn1, conn2) {
 			return
 		}
-		if !readMsgAndSend(conn2, conn1){
+		if !readMsgAndSend(conn2, conn1) {
 			return
 		}
 	}
