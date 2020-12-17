@@ -13,12 +13,10 @@ const (
 	CONN_HOST        = "localhost"
 	CONN_PORT        = "12345"
 	CONN_TYPE        = "tcp"
-	BIG              = 100000
-	SMALL            = -BIG
 	PLAYER_ONE_COLOR = "○"
 	PLAYER_TWO_COLOR = "◙"
 	MIN_DIFFICULTY   = 1
-	MAX_DIFFICULTY   = 10
+	MAX_DIFFICULTY   = 12
 )
 
 var b *Board = NewBoard()
@@ -50,6 +48,7 @@ func playAgainstAi() {
 
 		if waiting {
 			fmt.Println("waiting for oponent move...\n")
+
 			_, bestMove := alphabeta(b, true, 0, SMALL, BIG, difficulty)
 			b.drop(bestMove, PLAYER_TWO_COLOR)
 			waiting = false
@@ -86,8 +85,8 @@ func playMultiplayer() {
 
 	var waiting bool
 
-	fmt.Println("Connecting to", CONN_TYPE, "server", CONN_HOST + ":" + CONN_PORT)
-	conn, err := net.Dial(CONN_TYPE, CONN_HOST + ":"+CONN_PORT)
+	fmt.Println("Connecting to", CONN_TYPE, "server", CONN_HOST+":"+CONN_PORT)
+	conn, err := net.Dial(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
 		os.Exit(1)
@@ -97,17 +96,17 @@ func playMultiplayer() {
 	var input int
 	fmt.Scan(&input)
 
-	if input == 1{
+	if input == 1 {
 		fmt.Fprintf(conn, "wait\n")
 
 		var token string
 		fmt.Fscan(conn, &token)
 		fmt.Printf("You token is:%s\n", token)
 		fmt.Println("waiting for a friend to connect...")
-		
+
 		var msg string
 		fmt.Fscan(conn, &msg)
-		
+
 		color = PLAYER_TWO_COLOR
 		opponentColor = PLAYER_ONE_COLOR
 		waiting = true
@@ -117,7 +116,7 @@ func playMultiplayer() {
 		var token string
 		fmt.Printf("Enter friend token\n")
 		fmt.Scan(&token)
-		
+
 		fmt.Fprintf(conn, "%s\n", token)
 		var msg string
 		fmt.Fscan(conn, &msg)
@@ -158,7 +157,7 @@ func playMultiplayer() {
 
 				var column int
 				_, err = fmt.Scan(&column)
-				
+
 				if err != nil || !b.drop(column, color) {
 					fmt.Println("You cant place here! Try another column")
 				} else {
@@ -202,3 +201,4 @@ func main() {
 	}
 
 }
+	

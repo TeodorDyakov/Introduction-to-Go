@@ -45,13 +45,13 @@ func (b *Board) printBoard() {
 	}
 }
 
-func (b *Board) undoDrop(column int){
+func (b *Board) undoDrop(column int) {
 	b.col[column]--
 	b.board[5-b.col[column]][column] = EMPTY_SPOT
 }
 
 func (b *Board) drop(column int, player string) bool {
-	if column < len(b.board[0])  && (column >= 0) && b.col[column] < len(b.board){
+	if column < len(b.board[0]) && (column >= 0) && b.col[column] < len(b.board) {
 		b.board[5-b.col[column]][column] = player
 		b.col[column]++
 		return true
